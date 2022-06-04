@@ -1,0 +1,10 @@
+namespace: eugeniodepalo
+name: workstation
+version: 1.0.0
+readme: README.md
+authors:
+- Eugenio Depalo <eugeniodepalo@gmail.com>
+dependencies:
+  community.general: '*'
+  community.docker: '*'
+  ansible.posix: '*'

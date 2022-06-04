@@ -1,0 +1,476 @@
+- hosts: all
+  tasks:
+    - assert:
+        that: "{{ item }} is defined"
+      with_items:
+        - ws_1password_email
+        - ws_1password_password
+        - ws_1password_secret_key
+        - ws_1password_address
+        - ws_1password_identity
+    - name: Import 1password repo GPG key
+      become: yes
+      ansible.builtin.rpm_key:
+        key: https://downloads.1password.com/linux/keys/1password.asc
+    - name: Add 1password repo
+      become: yes
+      ansible.builtin.yum_repository:
+        name: 1password
+        description: 1Password Stable Channel
+        baseurl: https://downloads.1password.com/linux/rpm/stable/$basearch
+        gpgkey: https://downloads.1password.com/linux/keys/1password.asc
+        repo_gpgcheck: yes
+        gpgcheck: yes
+    - name: Install 1password-cli
+      become: yes
+      ansible.builtin.dnf:
+        name: 1password-cli
+    - name: Setup 1password-cli
+      ws_1password_cli:
+        email: "{{ ws_1password_email }}"
+        password: "{{ ws_1password_password }}"
+        secret_key: "{{ ws_1password_secret_key }}"
+        address: "{{ ws_1password_address }}"
+      register: ws_1password
+    - name: Enable CodeReady Builder repo
+      become: yes
+      ansible.builtin.rhsm_repository:
+        name: codeready-builder-for-rhel-9-x86_64-rpms
+    - name: Install additional repos
+      become: yes
+      ansible.builtin.dnf:
+        name:
+          - https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+          - https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm
+          - https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-9.noarch.rpm
+        disable_gpg_check: yes
+    - name: Import additional repos GPG keys
+      become: yes
+      ansible.builtin.rpm_key:
+        key: "{{ item }}"
+      loop:
+        - https://packages.microsoft.com/keys/microsoft.asc
+        - https://download.docker.com/linux/centos/gpg
+    - name: Add Visual Studio Code repo
+      become: yes
+      ansible.builtin.yum_repository:
+        name: code
+        description: Visual Studio Code - $basearch
+        baseurl: https://packages.microsoft.com/yumrepos/vscode
+        gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+        gpgcheck: yes
+    - name: Add Docker CE repo
+      become: yes
+      ansible.builtin.yum_repository:
+        name: docker-ce-stable
+        description: Docker CE Stable - $basearch
+        baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+        gpgkey: https://download.docker.com/linux/centos/gpg
+        gpgcheck: yes
+    - name: Add Slack repo
+      become: yes
+      ansible.builtin.yum_repository:
+        name: slack
+        description: Slack - $basearch
+        baseurl: https://packagecloud.io/slacktechnologies/slack/fedora/21/x86_64
+        sslverify: yes
+        sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+        gpgcheck: no
+    - name: Remove unused RPMs
+      become: yes
+      ansible.builtin.dnf:
+        name:
+          - cheese
+          - gnome-calculator
+          - setroubleshoot
+          - evolution
+          - gedit
+          - gnome-tour
+          - cockpit
+        autoremove: yes
+    - name: Install RPMs without GPG check
+      become: yes
+      ansible.builtin.dnf:
+        name:
+          - https://download1.rpmfusion.org/free/el/updates/8/x86_64/g/gstreamer1-libav-1.16.1-1.el8.x86_64.rpm
+          - https://zoom.us/client/latest/zoom_x86_64.rpm
+        disable_gpg_check: yes
+    - name: Install RPMs
+      become: yes
+      ansible.builtin.dnf:
+        name:
+          - 1password
+          - code
+          - slack
+          - docker-ce
+          - docker-compose-plugin
+          - firewall-config
+          - gnome-extensions-app
+          - kernel-devel
+          - seahorse
+          - snapd
+          - thunderbird
+          - xrdp
+          - xorgxrdp
+          - flatpak
+          - python3-psutil
+          - python3-pip
+          - python3-docker
+          - genisoimage
+          - isomd5sum
+    - name: Install github3.py
+      become: yes
+      ansible.builtin.pip:
+        name: github3.py
+    - name: Add CUDA repo
+      become: yes
+      ansible.builtin.yum_repository:
+        name: cuda-rhel9-$basearch
+        description: CUDA - $basearch
+        baseurl: https://developer.download.nvidia.com/compute/cuda/repos/rhel9/$basearch
+        gpgkey: https://developer.download.nvidia.com/compute/cuda/repos/rhel9/$basearch/D42D0685.pub
+        gpgcheck: yes
+    - name: Install NVIDIA drivers
+      become: yes
+      ansible.builtin.dnf:
+        name: "@nvidia-driver:latest"
+    - name: Get VMware Workstation license
+      ws_1password_cli_get:
+        token: "{{ ws_1password.token }}"
+        name: VMware Workstation Pro 16
+        fields:
+          - license key
+      register: vmware_workstation
+    - name: Install VMware Workstation
+      include_role:
+        name: eugeniodepalo.vmware-workstation
+      vars:
+        workstation_license: "{{vmware_workstation.fields['license key']}}"
+    - name: Get private GPG key
+      ws_1password_cli_get:
+        token: "{{ ws_1password.token }}"
+        name: GPG Private Key
+        fields:
+          - notesPlain
+          - password
+      register: gpg_private_key
+    - name: Get public GPG key
+      ws_1password_cli_get:
+        token: "{{ ws_1password.token }}"
+        name: GPG Public Key
+        fields:
+          - fingerprint
+      register: gpg_public_key
+    - name: List GPG keys
+      ansible.builtin.command: gpg --list-keys {{ gpg_public_key.fields.fingerprint }}
+      register: gpg_keys_list
+      changed_when: false
+      failed_when:
+        - gpg_keys_list is failed
+        - "'No public key' not in gpg_keys_list.stderr"
+    - name: Create temporary file for GPG key
+      ansible.builtin.tempfile:
+        state: file
+        suffix: temp
+      when: "'No public key' in gpg_keys_list.stderr"
+      register: gpg_tempfile
+    - name: Write GPG key to temporary file
+      ansible.builtin.copy:
+        dest: "{{ gpg_tempfile.path }}"
+        content: "{{ gpg_private_key.fields.notesPlain }}"
+      when: "'No public key' in gpg_keys_list.stderr"
+    - name: Import GPG private key
+      ansible.builtin.command: gpg --passphrase "{{ gpg_private_key.fields.password }}" --pinentry-mode loopback --import "{{ gpg_tempfile.path }}"
+      when: "'No public key' in gpg_keys_list.stderr"
+    - name: Get GitHub PAT
+      ws_1password_cli_get:
+        token: "{{ ws_1password.token }}"
+        name: GitHub Personal Access Token
+        fields:
+          - notesPlain
+      register: github_pat
+    - name: Get docker-credential-helpers latest release
+      github_release:
+        user: docker
+        repo: docker-credential-helpers
+        token: "{{ github_pat.fields.notesPlain }}"
+        action: latest_release
+      register: docker_credential_helpers_release
+    - name: Install docker-credentials-helper
+      become: yes
+      ansible.builtin.unarchive:
+        src: https://github.com/docker/docker-credential-helpers/releases/download/{{ docker_credential_helpers_release.tag }}/docker-credential-secretservice-{{ docker_credential_helpers_release.tag }}-amd64.tar.gz
+        dest: /usr/local/bin
+        remote_src: yes
+    - name: Get p2 latest release
+      github_release:
+        user: wrouesnel
+        repo: p2cli
+        token: "{{ github_pat.fields.notesPlain }}"
+        action: latest_release
+      register: p2_release
+    - name: Install p2
+      become: yes
+      ansible.builtin.get_url:
+        dest: /usr/local/bin/p2
+        url: https://github.com/wrouesnel/p2cli/releases/download/{{ p2_release.tag }}/p2-linux-x86_64
+        mode: "0755"
+    - name: Get git-credential-manager latest release
+      github_release:
+        user: GitCredentialManager
+        repo: git-credential-manager
+        token: "{{ github_pat.fields.notesPlain }}"
+        action: latest_release
+      register: git_credential_manager_release
+    - name: Create git-credential-manager install dir
+      become: yes
+      ansible.builtin.file:
+        path: /opt/git-credential-manager
+        state: directory
+        mode: "0755"
+    - name: Install git-credential-manager
+      become: yes
+      ansible.builtin.unarchive:
+        src: https://github.com/GitCredentialManager/git-credential-manager/releases/download/{{ git_credential_manager_release.tag }}/gcm-linux_amd64.{{ git_credential_manager_release.tag | replace('v', '')}}.tar.gz
+        dest: /opt/git-credential-manager
+        remote_src: yes
+    - name: Create Docker config dir
+      ansible.builtin.file:
+        path: ~/.docker
+        state: directory
+        mode: "0755"
+    - name: Configure Docker daemon
+      ansible.builtin.copy:
+        dest: ~/.docker/config.json
+        content: '{ "credsStore": "secretservice" }'
+    - name: Add user to docker group
+      become: yes
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+    - name: Enable docker
+      become: yes
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: yes
+    - name: Log into ghcr.io
+      community.docker.docker_login:
+          registry_url: ghcr.io
+          username: $
+          password: "{{ github_pat.fields.notesPlain }}"
+    - name: Get personal identity
+      ws_1password_cli_get:
+        token: "{{ ws_1password.token }}"
+        name: "{{ ws_1password_identity }}"
+        fields:
+          - first name
+          - last name
+          - email
+      register: personal_identity
+    - name: Configure git
+      community.general.git_config:
+        name: "{{ item.name }}"
+        scope: global
+        value: "{{ item.value }}"
+      loop:
+        - { name: credential.helper, value: "/opt/git-credential-manager/git-credential-manager-core" }
+        - { name: credential.credentialStore, value: "secretservice" }
+        - { name: user.name, value: "{{ personal_identity.fields['first name'] }} {{ personal_identity.fields['last name'] }}" }
+        - { name: user.email, value: "{{ personal_identity.fields.email }}" }
+        - { name: user.signingkey, value: "{{ gpg_public_key.fields.fingerprint }}" }
+    - name: Configure GRUB defaults
+      become: yes
+      ansible.builtin.lineinfile:
+        dest: /etc/default/grub
+        regexp: '^GRUB_CMDLINE_LINUX="(.*) quiet .*'
+        line: 'GRUB_CMDLINE_LINUX="\1 quiet loglevel=0 rd.driver.blacklist=nouveau nvidia-drm.modeset=1 vt.global_cursor_default=0"'
+        backrefs: yes
+    - name: Disable kernel printk
+      become: yes
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/20-quiet-printk.conf
+        content: "kernel.printk = 0 0 0 0\n"
+    - name: Disable Wayland
+      become: yes
+      ansible.builtin.ini_file:
+        path: /etc/gdm/custom.conf
+        section: daemon
+        option: WaylandEnable
+        value: false
+        no_extra_spaces: true
+    - name: Link GDM monitor settings with user settings
+      become: yes
+      ansible.builtin.file:
+        src: ~/.config/monitors.xml
+        dest: /var/lib/gdm/.config/monitors.xml
+        state: link
+        owner: "{{ ansible_user }}"
+        force: yes
+    - name: Allow access to system services
+      become: yes
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: enabled
+      loop:
+        - rdp
+        - ssh
+    - name: Enable system services
+      become: yes
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - xrdp
+        - sshd
+        - vmware
+        - vmware-usbarbitrator
+        - vmware-workstation-server
+    - name: Enable snapd socket
+      become: yes
+      ansible.builtin.systemd:
+        name: snapd.socket
+        state: started
+        enabled: yes
+    - name: Create symbolic link for classic snaps
+      become: yes
+      ansible.builtin.file:
+        src: /var/lib/snapd/snap
+        dest: /snap
+        state: link
+        force: yes
+    - name: Install snaps
+      become: yes
+      retries: 2
+      register: snap_result
+      until: snap_result is succeeded
+      snap:
+        name:
+          - spotify
+          - beekeeper-studio
+    - name: Add flathub remote
+      become: yes
+      community.general.flatpak_remote:
+        name: flathub
+        flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+    - name: Install flatpaks
+      community.general.flatpak:
+        name:
+          - com.valvesoftware.Steam
+          - org.gimp.GIMP
+          - org.gnome.FileRoller
+          - org.signal.Signal
+    - name: Configure GNOME desktop
+      community.general.dconf:
+        key: /org/gnome/desktop/{{ item.key}}
+        value: "{{ item.value }}"
+      loop:
+        - { key: color-shading-type, value: "'solid'" }
+        - { key: background/primary-color, value: "'#f3f3f3'" }
+        - { key: background/picture-options, value: "'none'" }
+        - { key: interface/enable-hot-corners, value: "false" }
+        - { key: wm/preferences/button-layout, value: "'appmenu:minimize,maximize,close'" }
+        - { key: wm/preferences/num-workspaces, value: "1" }
+    - name: Configure GNOME Terminal
+      community.general.dconf:
+        key: /org/gnome/terminal/legacy/theme-variant
+        value: "'system'"
+    - name: Configure background logo extension
+      community.general.dconf:
+        key: /org/fedorahosted/background-logo-extension/{{item.key}}
+        value: "{{ item.value }}"
+      loop:
+        - { key: logo-always-visible, value: "true" }
+        - { key: logo-position, value: "'center'" }
+        - { key: logo-size, value: "15" }
+        - { key: logo-file, value: "'/usr/share/redhat-logos/fedora_logo.svg'" }
+    - name: Install GNOME extensions
+      include_role:
+        name: petermosmans.customize-gnome
+      vars:
+        gnome_extensions:
+          - id: 307 # dash-to-dock@micxgx.gmail.com
+            enable: yes
+          - id: 2890 # trayIconsReloaded@selfmade.pl
+            enable: yes
+    - name: Configure dash-to-dock
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/dash-to-dock/{{item.key}}"
+        value: "{{item.value}}"
+      loop:
+        - { key: apply-custom-theme, value: "false" }
+        - { key: click-action, value: "'minimize'" }
+        - { key: custom-theme-shrink, value: "true" }
+        - { key: dock-fixed, value: "true" }
+        - { key: extend-height, value: "true" }
+        - { key: preferred-monitor, value: "0" }
+        - { key: scroll-action, value: "'cycle-windows'" }
+        - { key: dash-max-icon-size, value: "32" }
+    - name: Configure trayIconsReloaded
+      community.general.dconf:
+        key: "/org/gnome/shell/extensions/trayIconsReloaded/{{item.key}}"
+        value: "{{item.value}}"
+      loop:
+        - key: icon-margin-horizontal
+          value: "0"
+        - key: icon-padding-horizontal
+          value: "4"
+        - key: icons-limit
+          value: "10"
+    - name: Configure Firefox
+      include_role:
+        name: staticdev.firefox
+      vars:
+        firefox_profiles:
+          workstation:
+            extensions:
+              - 1password-x-password-manager
+              - betterttv
+              - 7tv
+            preferences:
+              browser.bookmarks.restore_default_bookmarks: false
+              browser.migration.version: 116
+              browser.newtabpage.activity-stream.feeds.section.topstories: false
+              browser.newtabpage.activity-stream.feeds.topsites: false
+              browser.newtabpage.activity-stream.topSitesRows: 0
+              browser.newtabpage.storageVersion: 1
+              browser.pagethumbnails.storage_version: 3
+              browser.proton.toolbar.version: 3
+              browser.startup.homepage: "about:home"
+              browser.toolbars.bookmarks.visibility: "never"
+              signon.rememberSignons: false
+    - name: Set Firefox default profile
+      ansible.builtin.ini_file:
+        path: ~/.mozilla/firefox/profiles.ini
+        section: Install11457493C5A56847
+        option: Default
+        value: "{{create_profile.profile_path | basename}}"
+        no_extra_spaces: true
+    - name: Configure favorite apps
+      community.general.dconf:
+        key: "/org/gnome/shell/favorite-apps"
+        value: "['org.gnome.Nautilus.desktop', \
+'firefox.desktop', \
+'thunderbird.desktop', \
+'slack.desktop', \
+'Zoom.desktop', \
+'org.signal.Signal.desktop', \
+'spotify_spotify.desktop', \
+'code.desktop', \
+'org.gnome.Terminal.desktop', \
+'vmware-workstation.desktop', \
+'beekeeper-studio_beekeeper-studio.desktop'\
+]"
+    - name: Create Repos dir
+      ansible.builtin.file:
+        path: ~/Repos
+        state: directory
+        mode: "0755"
+    - name: Create Virtual Machines dir
+      ansible.builtin.file:
+        path: ~/Virtual Machines
+        state: directory
+        mode: "0755"
