@@ -67,7 +67,7 @@ def run_module():
     )
 
     params = module.params
-    account = get_account(module, params['address'], params['email'])
+    account = get_account(module, params['address'], params['email'], params['device'])
 
     if not account:
         result['changed'] = True
@@ -75,28 +75,33 @@ def run_module():
         if module.check_mode:
             module.exit_json(**result)
 
-        module.run_command(['bash', '--login', '-i', '-c', 'echo {} | op account add --email {} --address {} --secret-key {}'.format(
-            params['password'],
-            params['email'],
-            params['address'],
-            params['secret_key']
-        )], check_rc=True)
+        module.run_command(['op', 'account', 'add',
+            '--email', params['email'],
+            '--address', params['address'],
+            '--secret-key', params['secret_key']
+        ], check_rc=True, data=params['password'], environ_update=dict(OP_DEVICE=params['device']))
 
-        account = get_account(module, params['address'], params['email'])
+        account = get_account(module, params['address'], params['email'], params['device'])
 
     if module.check_mode:
         module.exit_json(**result)
 
     (_, token, _) = module.run_command(
-        ['op', 'signin', '--raw', '--account', account['account_uuid']], check_rc=True, data=params['password'])
+        ['op', 'signin', '--raw', '--account', account['account_uuid']],
+        check_rc=True,
+        data=params['password'],
+        environ_update=dict(OP_DEVICE=params['device'])
+    )
 
     result['token'] = token.strip()
     module.exit_json(**result)
 
 
-def get_account(module, address, email):
+def get_account(module, address, email, device):
     (_, accounts, _) = module.run_command(
-        ['op', 'account', 'list', '--format', 'json'], check_rc=True
+        ['op', 'account', 'list', '--format', 'json'],
+        check_rc=True,
+        environ_update=dict(OP_DEVICE=device)
     )
 
     accounts = json.loads(accounts)
