@@ -60,7 +60,7 @@ def run_module():
         address=dict(type='str', required=True),
         email=dict(type='str', required=True),
         password=dict(type='str', required=True, no_log=True),
-        secret_key=dict(type='str', required=True, no_log=True)
+        secret_key=dict(type='str', required=True, no_log=True),
         device=dict(type='str', required=True, no_log=True)
     )
 
