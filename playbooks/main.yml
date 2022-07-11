@@ -202,7 +202,7 @@
           - notesPlain
       register: github_pat
     - name: Get docker-credential-helpers latest release
-      github_release:
+      community.general.github_release:
         user: docker
         repo: docker-credential-helpers
         token: "{{ github_pat.fields.notesPlain }}"
@@ -215,7 +215,7 @@
         dest: /usr/local/bin
         remote_src: yes
     - name: Get p2 latest release
-      github_release:
+      community.general.github_release:
         user: wrouesnel
         repo: p2cli
         token: "{{ github_pat.fields.notesPlain }}"
@@ -228,7 +228,7 @@
         url: https://github.com/wrouesnel/p2cli/releases/download/{{ p2_release.tag }}/p2-linux-x86_64
         mode: "0755"
     - name: Get git-credential-manager latest release
-      github_release:
+      community.general.github_release:
         user: GitCredentialManager
         repo: git-credential-manager
         token: "{{ github_pat.fields.notesPlain }}"
@@ -373,7 +373,7 @@
       retries: 1
       register: snap_result
       until: snap_result is succeeded
-      snap:
+      community.general.snap:
         name:
           - spotify
           - beekeeper-studio
