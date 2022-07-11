@@ -8,6 +8,11 @@
         - ws_1password_secret_key
         - ws_1password_address
         - ws_1password_identity
+        - ws_1password_device
+    - name: Install requirements
+      community.general.ansible_galaxy_install:
+      type: role
+      requirements_file: meta/requirements.yml
     - name: Import 1password repo GPG key
       become: yes
       ansible.builtin.rpm_key:
