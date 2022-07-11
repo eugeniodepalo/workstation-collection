@@ -29,7 +29,10 @@ options:
         description: The secret key for the account.
         required: true
         type: str
-
+    device:
+        description: The random device ID associated with the machine.
+        required: true
+        type: str
 author:
     - Eugenio Depalo (@eugeniodepalo)
 '''
@@ -48,6 +51,7 @@ EXAMPLES = r'''
     email: user@example.com
     password: 123456
     secret_key: 123456789
+    device: hyimtn4ehr7odh2to7k2vkvgkq
 '''
 
 
@@ -57,6 +61,7 @@ def run_module():
         email=dict(type='str', required=True),
         password=dict(type='str', required=True, no_log=True),
         secret_key=dict(type='str', required=True, no_log=True)
+        device=dict(type='str', required=True, no_log=True)
     )
 
     result = dict(changed=False)
