@@ -356,7 +356,7 @@
         force: yes
     - name: Install snaps
       become: yes
-      retries: 2
+      retries: 1
       register: snap_result
       until: snap_result is succeeded
       snap:
