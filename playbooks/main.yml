@@ -409,9 +409,7 @@
       vars:
         gnome_extensions:
           - id: 307 # dash-to-dock@micxgx.gmail.com
-            enable: yes
           - id: 2890 # trayIconsReloaded@selfmade.pl
-            enable: yes
     - name: Configure dash-to-dock
       community.general.dconf:
         key: "/org/gnome/shell/extensions/dash-to-dock/{{item.key}}"
@@ -436,6 +434,10 @@
           value: "4"
         - key: icons-limit
           value: "10"
+    - name: Enable GNOME extensions
+      community.general.dconf:
+        key: "/org/gnome/shell/enabled-extensions"
+        value: "['background-logo@fedorahosted.org', 'dash-to-dock@micxgx.gmail.com', 'trayIconsReloaded@selfmade.pl']"
     - name: Configure Firefox
       include_role:
         name: staticdev.firefox
