@@ -312,6 +312,10 @@
         option: WaylandEnable
         value: false
         no_extra_spaces: true
+    - name: Touch a file, using symbolic modes to set the permissions (equivalent to 0644)
+      ansible.builtin.file:
+        path: ~/.config/monitors.xml
+        state: touch
     - name: Link GDM monitor settings with user settings
       become: yes
       ansible.builtin.file:
