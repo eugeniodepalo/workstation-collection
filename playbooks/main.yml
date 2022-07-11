@@ -438,12 +438,9 @@
         key: "/org/gnome/shell/extensions/trayIconsReloaded/{{item.key}}"
         value: "{{item.value}}"
       loop:
-        - key: icon-margin-horizontal
-          value: "0"
-        - key: icon-padding-horizontal
-          value: "4"
-        - key: icons-limit
-          value: "10"
+        - { key: icon-margin-horizontal, value: "0" }
+        - { key: icon-padding-horizontal, value: "4" }
+        - { key: icons-limit, value: "10" }
     - name: Enable GNOME extensions
       community.general.dconf:
         key: "/org/gnome/shell/enabled-extensions"
