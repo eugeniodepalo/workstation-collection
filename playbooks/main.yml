@@ -308,7 +308,7 @@
     - name: Update GRUB configuration
       become: yes
       ansible.builtin.command: grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg
-      when: configure_grub[0] is changed or configure_grub[1] is changed
+      when: configure_grub is changed
     - name: Disable kernel printk
       become: yes
       ansible.builtin.copy:
