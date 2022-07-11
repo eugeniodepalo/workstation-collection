@@ -36,6 +36,7 @@
         password: "{{ ws_1password_password }}"
         secret_key: "{{ ws_1password_secret_key }}"
         address: "{{ ws_1password_address }}"
+        device: "{{ ws_1password_device }}"
       register: ws_1password
     - name: Enable CodeReady Builder repo
       become: yes
