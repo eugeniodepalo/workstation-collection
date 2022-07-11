@@ -134,6 +134,12 @@
       become: yes
       ansible.builtin.dnf:
         name: "@nvidia-driver:latest"
+    - name: Create /etc/init.d dir
+      become: yes
+      ansible.builtin.file:
+        path: /etc/init.d
+        state: directory
+        mode: "0755"
     - name: Get VMware Workstation license
       ws_1password_cli_get:
         token: "{{ ws_1password.token }}"
