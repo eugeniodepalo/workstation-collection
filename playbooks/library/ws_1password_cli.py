@@ -75,10 +75,12 @@ def run_module():
         if module.check_mode:
             module.exit_json(**result)
 
-        module.run_command(['op', 'account', 'add',
-                            '--email', params['email'],
-                            '--address', params['address'],
-                            '--secret-key', params['secret_key']], check_rc=True, data=params['password'])
+        module.run_command(['bash', '--login', '-i', '-c', 'echo {} | op account add --email {} --address {} --secret-key {}'.format(
+            params['password'],
+            params['email'],
+            params['address'],
+            params['secret_key']
+        )], check_rc=True)
 
         account = get_account(module, params['address'], params['email'])
 
