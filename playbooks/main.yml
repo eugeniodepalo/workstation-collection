@@ -1,8 +1,8 @@
 - hosts: all
   tasks:
-    - assert:
+    - ansible.builtin.assert:
         that: "{{ item }} is defined"
-      with_items:
+      loop:
         - ws_1password_email
         - ws_1password_password
         - ws_1password_secret_key
@@ -307,7 +307,7 @@
           line: 'GRUB_TIMEOUT=0'
     - name: Update GRUB configuration
       become: yes
-      ansible.builtin.command: grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg
+      ansible.builtin.command: grub2-mkconfig -o /boot/grub2/grub.cfg
       when: configure_grub is changed
     - name: Disable kernel printk
       become: yes
