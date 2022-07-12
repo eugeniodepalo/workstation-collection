@@ -94,11 +94,10 @@
           - gnome-tour
           - cockpit
         autoremove: yes
-    - name: Install RPMs without GPG check
+    - name: Install Zoom
       become: yes
       ansible.builtin.dnf:
         name:
-          - https://download1.rpmfusion.org/free/el/updates/8/x86_64/g/gstreamer1-libav-1.16.1-1.el8.x86_64.rpm
           - https://zoom.us/client/latest/zoom_x86_64.rpm
         disable_gpg_check: yes
     - name: Install RPMs
@@ -124,6 +123,7 @@
           - python3-docker
           - genisoimage
           - isomd5sum
+          - gstreamer1-libav
     - name: Install github3.py
       become: yes
       ansible.builtin.pip:
@@ -351,7 +351,6 @@
         - sshd
         - vmware
         - vmware-usbarbitrator
-        - vmware-workstation-server
     - name: Enable snapd socket
       become: yes
       ansible.builtin.systemd:
@@ -365,6 +364,11 @@
         dest: /snap
         state: link
         force: yes
+    - name: Hide snap folder
+      ansible.builtin.lineinfile:
+        line: snap
+        create: yes
+        path: ~/.hidden
     - name: Install snaps
       become: yes
       retries: 1
@@ -471,6 +475,13 @@
         option: Default
         value: "{{create_profile.profile_path | basename}}"
         no_extra_spaces: true
+    - name: Install custom desktop files
+      ansible.builtin.copy:
+        dest: "~/.local/share/applications/{{ item }}"
+        src: "{{ item }}"
+      loop:
+        - Zoom.desktop
+        - beekeeper-studio_beekeeper-studio.desktop
     - name: Configure favorite apps
       community.general.dconf:
         key: "/org/gnome/shell/favorite-apps"
