@@ -489,13 +489,11 @@
 'vmware-workstation.desktop', \
 'beekeeper-studio_beekeeper-studio.desktop'\
 ]"
-    - name: Create Repos dir
+    - name: Create home dirs
       ansible.builtin.file:
-        path: ~/Repos
+        path: "~/{{ item }}"
         state: directory
         mode: "0755"
-    - name: Create Virtual Machines dir
-      ansible.builtin.file:
-        path: ~/Virtual Machines
-        state: directory
-        mode: "0755"
+      loop:
+        - Repos
+        - Virtual Machines
