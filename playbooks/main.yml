@@ -322,18 +322,15 @@
         option: WaylandEnable
         value: false
         no_extra_spaces: true
-    - name: Touch monitors configuration file
-      ansible.builtin.file:
-        path: ~/.config/monitors.xml
-        state: touch
-    - name: Link GDM monitor settings with user settings
+    - name: Configure monitor
+      ansible.builtin.copy:
+        src: monitors.xml
+        dest: ~/.config/monitors.xml
+    - name: Configure GDM monitor
       become: yes
-      ansible.builtin.file:
-        src: "/home/{{ ansible_user }}/.config/monitors.xml"
+      ansible.builtin.copy:
+        src: monitors.xml
         dest: /var/lib/gdm/.config/monitors.xml
-        state: link
-        owner: "{{ ansible_user }}"
-        force: yes
     - name: Allow access to system services
       become: yes
       ansible.posix.firewalld:
