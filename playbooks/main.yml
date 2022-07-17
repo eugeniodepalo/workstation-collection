@@ -468,6 +468,7 @@
               browser.startup.homepage: "about:home"
               browser.toolbars.bookmarks.visibility: "never"
               signon.rememberSignons: false
+              media.videocontrols.picture-in-picture.video-toggle.enabled: false
     - name: Set Firefox default profile
       ansible.builtin.ini_file:
         path: ~/.mozilla/firefox/profiles.ini
