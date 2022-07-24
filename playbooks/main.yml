@@ -146,18 +146,6 @@
         path: /etc/init.d
         state: directory
         mode: "0755"
-    - name: Get VMware Workstation license
-      ws_1password_cli_get:
-        token: "{{ ws_1password.token }}"
-        name: VMware Workstation Pro 16
-        fields:
-          - license key
-      register: vmware_workstation
-    - name: Install VMware Workstation
-      include_role:
-        name: eugeniodepalo.vmware-workstation
-      vars:
-        workstation_license: "{{vmware_workstation.fields['license key']}}"
     - name: Get private GPG key
       ws_1password_cli_get:
         token: "{{ ws_1password.token }}"
@@ -349,8 +337,6 @@
       loop:
         - xrdp
         - sshd
-        - vmware
-        - vmware-usbarbitrator
     - name: Enable snapd socket
       become: yes
       ansible.builtin.systemd:
@@ -386,7 +372,6 @@
     - name: Install flatpaks
       community.general.flatpak:
         name:
-          - com.valvesoftware.Steam
           - org.gimp.GIMP
           - org.gnome.FileRoller
           - org.signal.Signal
@@ -495,14 +480,10 @@
 'spotify_spotify.desktop', \
 'code.desktop', \
 'org.gnome.Terminal.desktop', \
-'vmware-workstation.desktop', \
 'beekeeper-studio_beekeeper-studio.desktop'\
 ]"
-    - name: Create home dirs
+    - name: Create Repos dir
       ansible.builtin.file:
-        path: "~/{{ item }}"
+        path: ~/Repos
         state: directory
         mode: "0755"
-      loop:
-        - Repos
-        - Virtual Machines

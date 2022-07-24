@@ -1,4 +1,2 @@
   - name: petermosmans.customize-gnome
   - name: staticdev.firefox
-  - name: eugeniodepalo.vmware-workstation
-    src: git+https://github.com/eugeniodepalo/ansible-role-vmware-workstation.git
