@@ -377,7 +377,7 @@
           - org.signal.Signal
     - name: Configure GNOME desktop
       community.general.dconf:
-        key: /org/gnome/desktop/{{ item.key}}
+        key: "/org/gnome/desktop/{{ item.key }}"
         value: "{{ item.value }}"
       loop:
         - { key: peripherals/mouse/speed, value: "-0.456" }
@@ -387,6 +387,13 @@
         - { key: interface/enable-hot-corners, value: "false" }
         - { key: wm/preferences/button-layout, value: "'appmenu:minimize,maximize,close'" }
         - { key: wm/preferences/num-workspaces, value: "1" }
+    - name: Configure GNOME settings daemon
+      community.general.dconf:
+        key: "/org/gnome/settings-daemon/{{ item.key }}"
+        value: "{{ item.value }}"
+      loop:
+        - { key: plugins/power/power-button-action, value: "'nothing'" }
+        - { key: plugins/power/sleep-inactive-ac-type, value: "'nothing'" }
     - name: Configure GNOME Terminal
       community.general.dconf:
         key: /org/gnome/terminal/legacy/theme-variant
