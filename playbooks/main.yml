@@ -458,8 +458,8 @@
               browser.newtabpage.storageVersion: 1
               browser.pagethumbnails.storage_version: 3
               browser.proton.toolbar.version: 3
-              browser.startup.homepage: "about:home"
-              browser.toolbars.bookmarks.visibility: "never"
+              browser.startup.homepage: about:home
+              browser.toolbars.bookmarks.visibility: never
               signon.rememberSignons: false
               media.videocontrols.picture-in-picture.video-toggle.enabled: false
     - name: Set Firefox default profile
