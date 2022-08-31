@@ -337,6 +337,9 @@
       loop:
         - xrdp
         - sshd
+    - name: Set HW clock to local
+      community.general.timezone:
+        hwclock: local
     - name: Enable snapd socket
       become: yes
       ansible.builtin.systemd:
