@@ -115,8 +115,6 @@
           - seahorse
           - snapd
           - thunderbird
-          - xrdp
-          - xorgxrdp
           - flatpak
           - python3-psutil
           - python3-pip
@@ -328,15 +326,12 @@
       loop:
         - rdp
         - ssh
-    - name: Enable system services
+    - name: Enable sshd service
       become: yes
       ansible.builtin.systemd:
-        name: "{{ item }}"
+        name: sshd
         state: started
         enabled: yes
-      loop:
-        - xrdp
-        - sshd
     - name: Set HW clock to local
       community.general.timezone:
         hwclock: local
@@ -376,7 +371,6 @@
       community.general.flatpak:
         name:
           - org.gimp.GIMP
-          - org.gnome.FileRoller
           - org.signal.Signal
     - name: Configure GNOME desktop
       community.general.dconf:
