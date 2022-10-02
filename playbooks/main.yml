@@ -372,7 +372,7 @@
           - org.signal.Signal
     - name: Configure GTK file chooser
       community.general.dconf:
-        key: "/org/gtk/Settings/FileChooser/show-hidden"
+        key: "/org/gtk/settings/file-chooser/show-hidden"
         value: "false"
     - name: Configure GNOME desktop
       community.general.dconf:
