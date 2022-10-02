@@ -119,8 +119,6 @@
           - python3-psutil
           - python3-pip
           - python3-docker
-          - genisoimage
-          - isomd5sum
           - gstreamer1-libav
     - name: Install github3.py
       become: yes
