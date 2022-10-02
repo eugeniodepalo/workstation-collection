@@ -382,6 +382,10 @@
         - { key: interface/enable-hot-corners, value: "false" }
         - { key: wm/preferences/button-layout, value: "'appmenu:minimize,maximize,close'" }
         - { key: wm/preferences/num-workspaces, value: "1" }
+    - name: Configure Nautilus
+      community.general.dconf:
+        key: "/org/gnome/nautilus/preferences/show-hidden-files"
+        value: "false"
     - name: Configure GNOME settings daemon
       community.general.dconf:
         key: "/org/gnome/settings-daemon/{{ item.key }}"
