@@ -370,6 +370,10 @@
         name:
           - org.gimp.GIMP
           - org.signal.Signal
+    - name: Configure GTK file chooser
+      community.general.dconf:
+        key: "/org/gtk/Settings/FileChooser/show-hidden"
+        value: "false"
     - name: Configure GNOME desktop
       community.general.dconf:
         key: "/org/gnome/desktop/{{ item.key }}"
@@ -382,10 +386,6 @@
         - { key: interface/enable-hot-corners, value: "false" }
         - { key: wm/preferences/button-layout, value: "'appmenu:minimize,maximize,close'" }
         - { key: wm/preferences/num-workspaces, value: "1" }
-    - name: Configure GTK file chooser
-      community.general.dconf:
-        key: "org/gtk/Settings/FileChooser/show-hidden"
-        value: "false"
     - name: Configure GNOME settings daemon
       community.general.dconf:
         key: "/org/gnome/settings-daemon/{{ item.key }}"
