@@ -194,10 +194,10 @@
       register: docker_credential_helpers_release
     - name: Install docker-credentials-helper
       become: yes
-      ansible.builtin.unarchive:
-        src: https://github.com/docker/docker-credential-helpers/releases/download/{{ docker_credential_helpers_release.tag }}/docker-credential-secretservice-{{ docker_credential_helpers_release.tag }}-amd64.tar.gz
-        dest: /usr/local/bin
-        remote_src: yes
+      ansible.builtin.get_url:
+        dest: /usr/local/bin/docker-credential-secretservice
+        url: https://github.com/docker/docker-credential-helpers/releases/download/{{ docker_credential_helpers_release.tag }}/docker-credential-secretservice-{{ docker_credential_helpers_release.tag }}.linux-amd64
+        mode: "0755"
     - name: Get p2 latest release
       community.general.github_release:
         user: wrouesnel
