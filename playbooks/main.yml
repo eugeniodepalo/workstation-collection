@@ -112,9 +112,7 @@
           - snapd
           - thunderbird
           - flatpak
-          - python3-psutil
           - python3-pip
-          - python3-docker
           - gstreamer1-libav
     - name: Install github3.py
       become: yes
