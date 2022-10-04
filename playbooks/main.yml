@@ -193,19 +193,6 @@
         dest: /usr/local/bin/docker-credential-secretservice
         url: https://github.com/docker/docker-credential-helpers/releases/download/{{ docker_credential_helpers_release.tag }}/docker-credential-secretservice-{{ docker_credential_helpers_release.tag }}.linux-amd64
         mode: "0755"
-    - name: Get p2 latest release
-      community.general.github_release:
-        user: wrouesnel
-        repo: p2cli
-        token: "{{ github_pat.fields.notesPlain }}"
-        action: latest_release
-      register: p2_release
-    - name: Install p2
-      become: yes
-      ansible.builtin.get_url:
-        dest: /usr/local/bin/p2
-        url: https://github.com/wrouesnel/p2cli/releases/download/{{ p2_release.tag }}/p2-linux-x86_64
-        mode: "0755"
     - name: Get git-credential-manager latest release
       community.general.github_release:
         user: GitCredentialManager
@@ -310,15 +297,12 @@
       ansible.builtin.copy:
         src: monitors.xml
         dest: /var/lib/gdm/.config/monitors.xml
-    - name: Allow access to system services
+    - name: Allow access to SSH
       become: yes
       ansible.posix.firewalld:
-        service: "{{ item }}"
+        service: ssh
         permanent: yes
         state: enabled
-      loop:
-        - rdp
-        - ssh
     - name: Enable sshd service
       become: yes
       ansible.builtin.systemd:
